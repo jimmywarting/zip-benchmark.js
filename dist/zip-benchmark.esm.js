@@ -1987,6 +1987,16 @@ var init_shims = __esm({
     import_browser = __toESM(require_browser(), 1);
     globalThis.Buffer = import_buffer.Buffer;
     globalThis.process = import_browser.default;
+    if (typeof globalThis.setImmediate === "undefined") {
+      globalThis.setImmediate = function(callback, ...args) {
+        return setTimeout(callback, 0, ...args);
+      };
+    }
+    if (typeof globalThis.clearImmediate === "undefined") {
+      globalThis.clearImmediate = function(id) {
+        return clearTimeout(id);
+      };
+    }
   }
 });
 
