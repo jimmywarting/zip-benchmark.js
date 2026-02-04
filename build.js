@@ -77,6 +77,25 @@ await esbuild.build({
 const zipgoStats = await stat('dist/zipgo-only.js')
 console.log(`✅ Built dist/zipgo-only.js (${zipgoStats.size} bytes)`)
 
+// Build minified zip-go bundle
+await esbuild.build({
+  entryPoints: ['src/zipgo-only.js'],
+  bundle: true,
+  platform: 'browser',
+  target: 'es2022',
+  sourcemap: false,
+  format: 'esm',
+  outfile: 'dist/zipgo-only.min.js',
+  minify: true,
+  define: {
+    'process.env.NODE_ENV': '"production"',
+    'global': 'globalThis'
+  }
+})
+
+const zipgoMinStats = await stat('dist/zipgo-only.min.js')
+console.log(`✅ Built dist/zipgo-only.min.js (${zipgoMinStats.size} bytes)`)
+
 // Build yauzl only bundle (with all Node.js polyfills)
 const yauzlResult = await esbuild.build({
   entryPoints: ['src/yauzl-only.js'],
@@ -105,6 +124,34 @@ const yauzlResult = await esbuild.build({
 const yauzlStats = await stat('dist/yauzl-only.js')
 console.log(`✅ Built dist/yauzl-only.js (${yauzlStats.size} bytes)`)
 
+// Build minified yauzl bundle
+await esbuild.build({
+  entryPoints: ['src/yauzl-only.js'],
+  bundle: true,
+  platform: 'browser',
+  target: 'es2022',
+  sourcemap: false,
+  format: 'esm',
+  outfile: 'dist/yauzl-only.min.js',
+  minify: true,
+  define: {
+    'process.env.NODE_ENV': '"production"',
+    'global': 'globalThis'
+  },
+  alias: {
+    'fs': './src/fs-stub.js',
+    'zlib': 'browserify-zlib',
+    'stream': 'stream-browserify',
+    'util': 'util',
+    'events': 'events',
+    'buffer': 'buffer'
+  },
+  inject: ['./src/shims.js']
+})
+
+const yauzlMinStats = await stat('dist/yauzl-only.min.js')
+console.log(`✅ Built dist/yauzl-only.min.js (${yauzlMinStats.size} bytes)`)
+
 // Analyze dependencies from metafile
 const yauzlInputs = Object.keys(yauzlResult.metafile.inputs)
   .filter(input => input.includes('node_modules'))
@@ -122,11 +169,13 @@ console.log(`   Dependencies: ${uniqueYauzlDeps.length} packages`)
 const bundleData = {
   zipgo: {
     size: zipgoStats.size,
+    minified: zipgoMinStats.size,
     dependencies: [],
     npmPackages: []
   },
   yauzl: {
     size: yauzlStats.size,
+    minified: yauzlMinStats.size,
     dependencies: [
       'buffer',
       'stream-browserify',
@@ -138,6 +187,7 @@ const bundleData = {
     npmPackages: uniqueYauzlDeps
   },
   penalty: zipgoStats.size > 0 ? ((yauzlStats.size - zipgoStats.size) / zipgoStats.size * 100).toFixed(1) : '0',
+  penaltyMinified: zipgoMinStats.size > 0 ? ((yauzlMinStats.size - zipgoMinStats.size) / zipgoMinStats.size * 100).toFixed(1) : '0',
   generated: new Date().toISOString()
 }
 
@@ -145,9 +195,9 @@ await writeFile('dist/bundle-sizes.json', JSON.stringify(bundleData, null, 2))
 console.log('✅ Generated dist/bundle-sizes.json')
 
 console.log('\n📊 Bundle Size Comparison:')
-console.log(`   zip-go:  ${(zipgoStats.size / 1024).toFixed(2)} KB`)
-console.log(`   yauzl:   ${(yauzlStats.size / 1024).toFixed(2)} KB`)
-console.log(`   Penalty: ${bundleData.penalty}% larger`)
+console.log(`   zip-go:  ${(zipgoStats.size / 1024).toFixed(2)} KB (minified: ${(zipgoMinStats.size / 1024).toFixed(2)} KB)`)
+console.log(`   yauzl:   ${(yauzlStats.size / 1024).toFixed(2)} KB (minified: ${(yauzlMinStats.size / 1024).toFixed(2)} KB)`)
+console.log(`   Penalty: ${bundleData.penalty}% larger (minified: ${bundleData.penaltyMinified}% larger)`)
 console.log(`\n📦 yauzl brings in ${uniqueYauzlDeps.length} npm packages:`)
 console.log(`   ${uniqueYauzlDeps.join(', ')}`)
 console.log('\n✅ Build complete!')

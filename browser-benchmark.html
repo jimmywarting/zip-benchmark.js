@@ -242,17 +242,21 @@
         
         const zipgoKB = (data.zipgo.size / 1024).toFixed(2);
         const yauzlKB = (data.yauzl.size / 1024).toFixed(2);
+        const zipgoMinKB = (data.zipgo.minified / 1024).toFixed(2);
+        const yauzlMinKB = (data.yauzl.minified / 1024).toFixed(2);
         const multiplier = (data.yauzl.size / data.zipgo.size).toFixed(1);
+        const multiplierMin = (data.yauzl.minified / data.zipgo.minified).toFixed(1);
         
         bundleSizeSection.innerHTML = `
           <h3>📦 Bundle Size Penalty - Browserifying yauzl</h3>
-          <p>yauzl requires extensive Node.js polyfills to work in browsers, resulting in a <strong>${data.penalty}% larger bundle</strong> and bringing in <strong>${data.yauzl.npmPackages.length} npm packages</strong>.</p>
+          <p>yauzl requires extensive Node.js polyfills to work in browsers, resulting in a <strong>${data.penalty}% larger bundle (${data.penaltyMinified}% larger when minified)</strong> and bringing in <strong>${data.yauzl.npmPackages.length} npm packages</strong>.</p>
           
           <table class="size-table">
             <thead>
               <tr>
                 <th>Library</th>
                 <th>Bundle Size</th>
+                <th>Minified Size</th>
                 <th>Dependencies</th>
                 <th>Visual Comparison</th>
               </tr>
@@ -261,6 +265,7 @@
               <tr>
                 <td><strong>zip-go</strong></td>
                 <td><strong>${zipgoKB} KB</strong> (${data.zipgo.size.toLocaleString()} bytes)</td>
+                <td><strong>${zipgoMinKB} KB</strong> (${data.zipgo.minified.toLocaleString()} bytes)</td>
                 <td><span style="color: #28a745;">✓ Zero dependencies</span></td>
                 <td>
                   <div class="size-bar">
@@ -271,6 +276,7 @@
               <tr>
                 <td><strong>yauzl</strong></td>
                 <td><strong>${yauzlKB} KB</strong> (${data.yauzl.size.toLocaleString()} bytes)</td>
+                <td><strong>${yauzlMinKB} KB</strong> (${data.yauzl.minified.toLocaleString()} bytes)</td>
                 <td>
                   <div class="dependencies-list">
                     <strong>${data.yauzl.dependencies.length} Node.js polyfills required:</strong><br>
@@ -297,8 +303,14 @@
           
           <p style="margin-top: 15px; color: #856404;">
             <strong>⚠️ Key Insight:</strong> yauzl brings in <strong>${data.yauzl.npmPackages.length} npm packages</strong> including Node.js polyfills (buffer, streams, zlib, events, util, process) 
-            which adds <strong>${((data.yauzl.size - data.zipgo.size) / 1024).toFixed(2)} KB</strong> of overhead to your browser bundle. 
+            which adds <strong>${((data.yauzl.size - data.zipgo.size) / 1024).toFixed(2)} KB</strong> of overhead (<strong>${((data.yauzl.minified - data.zipgo.minified) / 1024).toFixed(2)} KB when minified</strong>) to your browser bundle. 
             zip-go works natively with browser APIs (Blob/File) and requires zero polyfills or dependencies.
+          </p>
+          
+          <p style="margin-top: 15px; padding: 15px; background: #fff3cd; border-left: 4px solid #ff9800; border-radius: 4px; color: #856404;">
+            <strong>💡 Side Note:</strong> This is what you get for trying to browserify packages built with Node.js dependencies. 
+            For better cross-platform compatibility, avoid using Buffer and Node.js streams in libraries intended for browser use. 
+            Build with browser-native APIs (Blob, File, ReadableStream) from the start.
           </p>
         `;
       } catch (error) {

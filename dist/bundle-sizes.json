@@ -1,11 +1,13 @@
 {
   "zipgo": {
     "size": 9010,
+    "minified": 4808,
     "dependencies": [],
     "npmPackages": []
   },
   "yauzl": {
     "size": 534786,
+    "minified": 226365,
     "dependencies": [
       "buffer",
       "stream-browserify",
@@ -69,5 +71,6 @@
     ]
   },
   "penalty": "5835.5",
-  "generated": "2026-02-04T20:27:31.409Z"
+  "penaltyMinified": "4608.1",
+  "generated": "2026-02-04T20:40:33.048Z"
 }
