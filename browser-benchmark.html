@@ -249,7 +249,7 @@
         
         bundleSizeSection.innerHTML = `
           <h3>📦 Bundle Size Penalty - Browserifying yauzl</h3>
-          <p>yauzl requires extensive Node.js polyfills to work in browsers, resulting in a <strong>${data.penalty}% larger bundle (${data.penaltyMinified}% minified)</strong> and bringing in <strong>${data.yauzl.npmPackages.length} npm packages</strong>.</p>
+          <p>yauzl requires extensive Node.js polyfills to work in browsers, resulting in a <strong>${data.penalty}% larger bundle (${data.penaltyMinified}% larger when minified)</strong> and bringing in <strong>${data.yauzl.npmPackages.length} npm packages</strong>.</p>
           
           <table class="size-table">
             <thead>
@@ -303,7 +303,7 @@
           
           <p style="margin-top: 15px; color: #856404;">
             <strong>⚠️ Key Insight:</strong> yauzl brings in <strong>${data.yauzl.npmPackages.length} npm packages</strong> including Node.js polyfills (buffer, streams, zlib, events, util, process) 
-            which adds <strong>${((data.yauzl.size - data.zipgo.size) / 1024).toFixed(2)} KB</strong> of overhead (<strong>${((data.yauzl.minified - data.zipgo.minified) / 1024).toFixed(2)} KB minified</strong>) to your browser bundle. 
+            which adds <strong>${((data.yauzl.size - data.zipgo.size) / 1024).toFixed(2)} KB</strong> of overhead (<strong>${((data.yauzl.minified - data.zipgo.minified) / 1024).toFixed(2)} KB when minified</strong>) to your browser bundle. 
             zip-go works natively with browser APIs (Blob/File) and requires zero polyfills or dependencies.
           </p>
         `;
