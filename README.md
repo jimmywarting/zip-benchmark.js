@@ -1,6 +1,14 @@
 # ZIP Benchmark
 
-A benchmark comparing the performance of `zip-go` and `yauzl` ZIP libraries for Node.js.
+A benchmark comparing the performance of `zip-go` and `yauzl` ZIP libraries for **Node.js** and **browsers**.
+
+## Features
+
+- 🚀 **Node.js benchmarks** - Traditional file-based testing
+- 🌐 **Browser benchmarks** - Compare performance in browsers using esm.sh
+- 📊 Multiple test scenarios (metadata, memory, disk, specific file)
+- 💾 Memory usage tracking
+- 🎯 Fair comparison with memory-based testing
 
 ## Installation
 
@@ -9,6 +17,8 @@ npm install
 ```
 
 ## Usage
+
+### Node.js Benchmarks
 
 Run the benchmark with a ZIP file:
 
@@ -33,6 +43,55 @@ Run with garbage collection exposed (for better memory measurements):
 node --expose-gc benchmark.js ./test.zip
 ```
 
+Quick test with included test.zip:
+```bash
+npm run bench:node
+```
+
+### Browser Benchmarks
+
+The browser benchmarks allow you to test ZIP library performance directly in your browser.
+
+#### Two Versions Available:
+
+1. **Full Benchmark** (`browser-benchmark.html`) - Compares zip-go and yauzl using esm.sh
+2. **Demo** (`browser-demo.html`) - Simple ZIP analyzer without external dependencies
+
+#### Running the Browser Benchmarks
+
+1. **Generate a test ZIP file** (optional, if you don't have one):
+   ```bash
+   npm run create-test-zip
+   ```
+
+2. **Start the local server**:
+   ```bash
+   npm run serve
+   ```
+
+3. **Open your browser**:
+   - Full benchmark: http://localhost:8080/browser-benchmark.html
+   - Demo: http://localhost:8080/browser-demo.html
+
+4. **Select a ZIP file** and click the appropriate button
+
+#### Browser Testing Features
+
+- 📦 **yauzl via esm.sh** - Uses `fromBuffer()` method with browserified Node.js APIs
+- 🌊 **zip-go native** - Works directly with browser File/Blob objects  
+- 🧪 **Fair comparison** - Both libraries read from memory (File object vs ArrayBuffer)
+- 🔬 **Browser-specific tests** - Tests optimized for browser environments
+- 🎯 **Demo version** - Pure browser implementation with no external dependencies
+
+#### Browser Testing Notes
+
+- `yauzl` depends on Node.js built-ins, so we use esm.sh for browser compatibility
+- `yauzl` uses `fromBuffer()` method to work with ArrayBuffer in browsers
+- `zip-go` works natively with browser Blob/File objects
+- Both read from memory for fair comparison (not from virtual filesystem)
+- **Important:** For the full benchmark, disable ad blockers if modules fail to load from esm.sh
+- The demo version (`browser-demo.html`) works without external CDN dependencies
+
 ## Tests
 
 The benchmark runs four different tests:
@@ -43,7 +102,7 @@ Tests the speed of reading metadata for all entries in the ZIP file without extr
 ### 2. 💾 Read All to Memory
 Tests the performance of reading all files into memory as ArrayBuffers.
 
-### 3. 💿 Stream to Disk
+### 3. 💿 Stream to Disk (Node.js only)
 Tests the real-world scenario of streaming all files to disk. This is the most realistic performance test.
 
 ### 4. 🎯 Read Specific File

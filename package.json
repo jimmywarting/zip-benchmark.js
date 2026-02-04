@@ -5,7 +5,10 @@
   "type": "module",
   "main": "benchmark.js",
   "scripts": {
-    "bench": "node benchmark.js"
+    "bench": "node benchmark.js",
+    "bench:node": "node benchmark.js test.zip",
+    "create-test-zip": "node create-test-zip.js",
+    "serve": "npx http-server -p 8080 -o browser-benchmark.html"
   },
   "keywords": [
     "zip",
@@ -22,5 +25,9 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "jszip": "^3.10.1"
   }
 }
