@@ -306,6 +306,12 @@
             which adds <strong>${((data.yauzl.size - data.zipgo.size) / 1024).toFixed(2)} KB</strong> of overhead (<strong>${((data.yauzl.minified - data.zipgo.minified) / 1024).toFixed(2)} KB when minified</strong>) to your browser bundle. 
             zip-go works natively with browser APIs (Blob/File) and requires zero polyfills or dependencies.
           </p>
+          
+          <p style="margin-top: 15px; padding: 15px; background: #fff3cd; border-left: 4px solid #ff9800; border-radius: 4px; color: #856404;">
+            <strong>💡 Side Note:</strong> This is what you get for trying to browserify packages built with Node.js dependencies. 
+            For better cross-platform compatibility, avoid using Buffer and Node.js streams in libraries intended for browser use. 
+            Build with browser-native APIs (Blob, File, ReadableStream) from the start.
+          </p>
         `;
       } catch (error) {
         console.error('Failed to load bundle size data:', error);

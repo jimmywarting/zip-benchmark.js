@@ -105,6 +105,8 @@ The browser benchmarks allow you to test ZIP library performance directly in you
 - Libraries are bundled using esbuild - no external CDN dependencies
 - The demo version (`browser-demo.html`) is a lightweight alternative that analyzes ZIP structure without external libraries
 
+> **💡 Side Note:** This benchmark demonstrates what happens when you try to browserify packages built with Node.js dependencies. yauzl requires 51 npm packages and extensive polyfills (buffer, streams, zlib, etc.), resulting in a 4608% larger minified bundle. For better cross-platform compatibility, avoid using Buffer and Node.js streams in libraries intended for browser use. Build with browser-native APIs (Blob, File, ReadableStream) from the start.
+
 ## Tests
 
 The benchmark runs four different tests:
