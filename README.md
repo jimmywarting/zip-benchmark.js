@@ -16,6 +16,18 @@ A benchmark comparing the performance of `zip-go` and `yauzl` ZIP libraries for 
 npm install
 ```
 
+## Building
+
+The browser benchmarks require bundled JavaScript files. Build them with:
+
+```bash
+npm run build
+```
+
+This creates bundled files in the `dist/` directory that include `zip-go`, `yauzl`, and all necessary Node.js polyfills for browser compatibility.
+
+The bundled files are committed to the repository, so you only need to rebuild if you update dependencies or modify the build configuration.
+
 ## Usage
 
 ### Node.js Benchmarks
@@ -77,20 +89,21 @@ The browser benchmarks allow you to test ZIP library performance directly in you
 
 #### Browser Testing Features
 
-- 📦 **yauzl via esm.sh** - Uses `fromBuffer()` method with browserified Node.js APIs
+- 📦 **yauzl bundled** - Uses `fromBuffer()` method with bundled Node.js polyfills for browser compatibility
 - 🌊 **zip-go native** - Works directly with browser File/Blob objects  
 - 🧪 **Fair comparison** - Both libraries read from memory (File object vs ArrayBuffer)
 - 🔬 **Browser-specific tests** - Tests optimized for browser environments
 - 🎯 **Demo version** - Pure browser implementation with no external dependencies
+- 🏗️ **No external CDNs** - All dependencies are bundled locally for reliability
 
 #### Browser Testing Notes
 
-- `yauzl` depends on Node.js built-ins, so we use esm.sh for browser compatibility
+- `yauzl` depends on Node.js built-ins, which are bundled as polyfills for browser compatibility
 - `yauzl` uses `fromBuffer()` method to work with ArrayBuffer in browsers
 - `zip-go` works natively with browser Blob/File objects
 - Both read from memory for fair comparison (not from virtual filesystem)
-- **Important:** For the full benchmark, disable ad blockers if modules fail to load from esm.sh
-- The demo version (`browser-demo.html`) works without external CDN dependencies
+- Libraries are bundled using esbuild - no external CDN dependencies
+- The demo version (`browser-demo.html`) is a lightweight alternative that analyzes ZIP structure without external libraries
 
 ## Tests
 

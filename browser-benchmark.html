@@ -127,11 +127,11 @@
     <div class="info">
       <strong>ℹ️ Browser Testing Notes:</strong>
       <ul>
-        <li><strong>yauzl</strong> uses fromBuffer() method via esm.sh for browser compatibility</li>
+        <li><strong>yauzl</strong> uses fromBuffer() method bundled with Node.js polyfills for browser compatibility</li>
         <li><strong>zip-go</strong> works natively with browser Blob/File objects</li>
         <li>Both libraries read from memory (File object) for fair comparison</li>
         <li>Some tests are browser-specific (OPFS support if available)</li>
-        <li><strong>⚠️ Important:</strong> Disable ad blockers if modules fail to load from esm.sh</li>
+        <li>Libraries are bundled locally - no external CDN dependencies</li>
       </ul>
     </div>
     
@@ -152,19 +152,8 @@
   </div>
 
   <script type="module">
-    import Reader from 'https://esm.sh/zip-go/lib/read.js?target=es2022'
-    import yauzl from 'https://esm.sh/yauzl?target=es2022'
-    import { Buffer } from 'https://esm.sh/buffer?target=es2022'
-    
-    // Import from esm.sh for browser compatibility
-    // Note: If you get CORS or blocked errors, you may need to:
-    // 1. Disable ad blockers or content blockers
-    // 2. Use a local bundled version
-    // 3. Host the libraries yourself
-    
-    // Version constants - update these to match package.json versions
-    const ZIP_GO_VERSION = '1.1.1';
-    const YAUZL_VERSION = '3.2.0';
+    // Import from local bundled files instead of esm.sh
+    import { Reader, yauzl, Buffer } from './dist/zip-benchmark.esm.js'
     
     let importError = null;
     let selectedFile = null;
@@ -253,14 +242,6 @@
       
       // yauzl test - using fromBuffer
       let time2 = 0, count2 = 0;
-      if (!yauzl) {
-        try {
-          // Try to load yauzl if not already loaded
-          yauzl = await import(`https://esm.sh/yauzl@${YAUZL_VERSION}`);
-        } catch (error) {
-          console.error('yauzl load error:', error);
-        }
-      }
       
       if (yauzl) {
         const start2 = performance.now();
