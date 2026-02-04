@@ -8,6 +8,7 @@
     "bench": "node benchmark.js",
     "bench:node": "node benchmark.js test.zip",
     "create-test-zip": "node create-test-zip.js",
+    "build": "node build.js",
     "serve": "npx http-server -p 8080 -o browser-benchmark.html"
   },
   "keywords": [
@@ -27,7 +28,15 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "assert": "^2.1.0",
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^6.0.3",
+    "esbuild": "^0.27.2",
+    "events": "^3.3.0",
     "http-server": "^14.1.1",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
+    "util": "^0.12.5"
   }
 }
