@@ -1,5 +1,5 @@
 import Reader from 'zip-go/lib/read.js'
-import { openAsBlob } from 'node:fs'
+import { openAsBlob, promises as fs } from 'node:fs'
 import yauzl from 'yauzl'
 import { promisify } from 'node:util'
 import { createWriteStream, mkdirSync, rmSync } from 'node:fs'
@@ -130,21 +130,7 @@ async function testStreamToDisk(zipPath, outputDir) {
       const outputPath = join(outputDir + '-zipgo', entry.name)
       mkdirSync(join(outputPath, '..'), { recursive: true })
       
-      const writeStream = createWriteStream(outputPath)
-      await stream.pipeTo(new WritableStream({
-        write(chunk) {
-          return new Promise((resolve, reject) => {
-            if (!writeStream.write(chunk)) {
-              writeStream.once('drain', resolve)
-            } else {
-              resolve()
-            }
-          })
-        },
-        close() {
-          return new Promise((resolve) => writeStream.end(resolve))
-        }
-      }))
+      await fs.writeFile(outputPath, stream)
       fileCount1++
     }
   }
