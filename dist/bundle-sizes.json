@@ -1,7 +1,8 @@
 {
   "zipgo": {
     "size": 9010,
-    "dependencies": []
+    "dependencies": [],
+    "npmPackages": []
   },
   "yauzl": {
     "size": 534786,
@@ -12,8 +13,61 @@
       "util",
       "browserify-zlib",
       "process"
+    ],
+    "npmPackages": [
+      "assert",
+      "available-typed-arrays",
+      "base64-js",
+      "browserify-zlib",
+      "buffer",
+      "buffer-crc32",
+      "call-bind",
+      "call-bind-apply-helpers",
+      "call-bound",
+      "define-data-property",
+      "define-properties",
+      "dunder-proto",
+      "es-define-property",
+      "es-errors",
+      "es-object-atoms",
+      "events",
+      "for-each",
+      "function-bind",
+      "generator-function",
+      "get-intrinsic",
+      "get-proto",
+      "gopd",
+      "has-property-descriptors",
+      "has-symbols",
+      "has-tostringtag",
+      "hasown",
+      "ieee754",
+      "inherits",
+      "is-arguments",
+      "is-callable",
+      "is-generator-function",
+      "is-nan",
+      "is-regex",
+      "is-typed-array",
+      "math-intrinsics",
+      "object-is",
+      "object-keys",
+      "object.assign",
+      "pako",
+      "pend",
+      "possible-typed-array-names",
+      "process",
+      "safe-buffer",
+      "safe-regex-test",
+      "set-function-length",
+      "stream-browserify",
+      "string_decoder",
+      "util",
+      "util-deprecate",
+      "which-typed-array",
+      "yauzl"
     ]
   },
   "penalty": "5835.5",
-  "generated": "2026-02-04T20:23:15.053Z"
+  "generated": "2026-02-04T20:24:57.363Z"
 }

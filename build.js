@@ -78,7 +78,7 @@ const zipgoStats = await stat('dist/zipgo-only.js')
 console.log(`✅ Built dist/zipgo-only.js (${zipgoStats.size} bytes)`)
 
 // Build yauzl only bundle (with all Node.js polyfills)
-await esbuild.build({
+const yauzlResult = await esbuild.build({
   entryPoints: ['src/yauzl-only.js'],
   bundle: true,
   platform: 'browser',
@@ -86,6 +86,7 @@ await esbuild.build({
   sourcemap: false,
   format: 'esm',
   outfile: 'dist/yauzl-only.js',
+  metafile: true,
   define: {
     'process.env.NODE_ENV': '"production"',
     'global': 'globalThis'
@@ -104,11 +105,25 @@ await esbuild.build({
 const yauzlStats = await stat('dist/yauzl-only.js')
 console.log(`✅ Built dist/yauzl-only.js (${yauzlStats.size} bytes)`)
 
+// Analyze dependencies from metafile
+const yauzlInputs = Object.keys(yauzlResult.metafile.inputs)
+  .filter(input => input.includes('node_modules'))
+  .map(input => {
+    const match = input.match(/node_modules\/([^\/]+)/)
+    return match ? match[1] : null
+  })
+  .filter(Boolean)
+
+const uniqueYauzlDeps = [...new Set(yauzlInputs)].sort()
+
+console.log(`   Dependencies: ${uniqueYauzlDeps.length} packages`)
+
 // Generate bundle size data for the browser benchmark
 const bundleData = {
   zipgo: {
     size: zipgoStats.size,
-    dependencies: []
+    dependencies: [],
+    npmPackages: []
   },
   yauzl: {
     size: yauzlStats.size,
@@ -119,7 +134,8 @@ const bundleData = {
       'util',
       'browserify-zlib',
       'process'
-    ]
+    ],
+    npmPackages: uniqueYauzlDeps
   },
   penalty: ((yauzlStats.size - zipgoStats.size) / zipgoStats.size * 100).toFixed(1),
   generated: new Date().toISOString()
@@ -132,4 +148,6 @@ console.log('\n📊 Bundle Size Comparison:')
 console.log(`   zip-go:  ${(zipgoStats.size / 1024).toFixed(2)} KB`)
 console.log(`   yauzl:   ${(yauzlStats.size / 1024).toFixed(2)} KB`)
 console.log(`   Penalty: ${bundleData.penalty}% larger`)
+console.log(`\n📦 yauzl brings in ${uniqueYauzlDeps.length} npm packages:`)
+console.log(`   ${uniqueYauzlDeps.join(', ')}`)
 console.log('\n✅ Build complete!')

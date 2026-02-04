@@ -243,7 +243,7 @@
         
         bundleSizeSection.innerHTML = `
           <h3>📦 Bundle Size Penalty - Browserifying yauzl</h3>
-          <p>yauzl requires extensive Node.js polyfills to work in browsers, resulting in a <strong>${data.penalty}% larger bundle</strong>.</p>
+          <p>yauzl requires extensive Node.js polyfills to work in browsers, resulting in a <strong>${data.penalty}% larger bundle</strong> and bringing in <strong>${data.yauzl.npmPackages.length} npm packages</strong>.</p>
           
           <table class="size-table">
             <thead>
@@ -270,8 +270,17 @@
                 <td><strong>${yauzlKB} KB</strong> (${data.yauzl.size.toLocaleString()} bytes)</td>
                 <td>
                   <div class="dependencies-list">
-                    <strong>${data.yauzl.dependencies.length} polyfills required:</strong><br>
+                    <strong>${data.yauzl.dependencies.length} Node.js polyfills required:</strong><br>
                     ${data.yauzl.dependencies.map(dep => `<code>${dep}</code>`).join(' ')}
+                    <br><br>
+                    <details style="cursor: pointer;">
+                      <summary style="font-weight: bold; margin-bottom: 5px;">
+                        📦 All ${data.yauzl.npmPackages.length} npm packages bundled (click to expand)
+                      </summary>
+                      <div style="max-height: 200px; overflow-y: auto; margin-top: 10px; padding: 10px; background: white; border: 1px solid #ddd; border-radius: 4px;">
+                        ${data.yauzl.npmPackages.map(pkg => `<code>${pkg}</code>`).join(' ')}
+                      </div>
+                    </details>
                   </div>
                 </td>
                 <td>
@@ -284,9 +293,9 @@
           </table>
           
           <p style="margin-top: 15px; color: #856404;">
-            <strong>⚠️ Key Insight:</strong> yauzl brings in Node.js polyfills (buffer, streams, zlib, events, util, process) 
-            which adds <strong>${(data.yauzl.size - data.zipgo.size / 1024).toFixed(2)} KB</strong> of overhead to your browser bundle. 
-            zip-go works natively with browser APIs (Blob/File) and requires zero polyfills.
+            <strong>⚠️ Key Insight:</strong> yauzl brings in <strong>${data.yauzl.npmPackages.length} npm packages</strong> including Node.js polyfills (buffer, streams, zlib, events, util, process) 
+            which adds <strong>${((data.yauzl.size - data.zipgo.size) / 1024).toFixed(2)} KB</strong> of overhead to your browser bundle. 
+            zip-go works natively with browser APIs (Blob/File) and requires zero polyfills or dependencies.
           </p>
         `;
       } catch (error) {
