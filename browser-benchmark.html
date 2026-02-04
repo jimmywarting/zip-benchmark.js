@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZIP Benchmark - Browser</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+    }
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .file-input {
+      margin: 20px 0;
+      padding: 10px;
+      border: 2px dashed #ccc;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .file-input input {
+      display: none;
+    }
+    .file-input label {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .file-input label:hover {
+      background: #0056b3;
+    }
+    .file-info {
+      margin-top: 10px;
+      color: #666;
+    }
+    button {
+      padding: 12px 24px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .results {
+      margin-top: 20px;
+    }
+    .test-result {
+      margin: 15px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border-left: 4px solid #007bff;
+    }
+    .test-result h3 {
+      margin-top: 0;
+    }
+    .metric {
+      margin: 5px 0;
+      font-family: 'Courier New', monospace;
+    }
+    .winner {
+      display: inline-block;
+      padding: 2px 8px;
+      background: #ffc107;
+      border-radius: 3px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    .error {
+      color: #dc3545;
+      padding: 10px;
+      background: #f8d7da;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+    .status {
+      margin: 10px 0;
+      padding: 10px;
+      background: #d1ecf1;
+      border-radius: 4px;
+      color: #0c5460;
+    }
+    pre {
+      background: #272822;
+      color: #f8f8f2;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .info {
+      background: #d1ecf1;
+      border-left: 4px solid #17a2b8;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏁 ZIP Benchmark - Browser Edition</h1>
+    <p>Compare the performance of <code>zip-go</code> and <code>yauzl</code> ZIP libraries in the browser.</p>
+    
+    <div class="info">
+      <strong>ℹ️ Browser Testing Notes:</strong>
+      <ul>
+        <li><strong>yauzl</strong> uses fromBuffer() method via esm.sh for browser compatibility</li>
+        <li><strong>zip-go</strong> works natively with browser Blob/File objects</li>
+        <li>Both libraries read from memory (File object) for fair comparison</li>
+        <li>Some tests are browser-specific (OPFS support if available)</li>
+      </ul>
+    </div>
+    
+    <div class="file-input">
+      <label for="zipFile">
+        📁 Select ZIP File
+      </label>
+      <input type="file" id="zipFile" accept=".zip">
+      <div class="file-info" id="fileInfo"></div>
+    </div>
+    
+    <div>
+      <button id="runBenchmark" disabled>▶️ Run Benchmark</button>
+      <button id="clearResults">🗑️ Clear Results</button>
+    </div>
+    
+    <div class="results" id="results"></div>
+  </div>
+
+  <script type="module">
+    // Import from esm.sh for browser compatibility
+    import Reader from 'https://esm.sh/zip-go@1.1.1/lib/read.js';
+    
+    let selectedFile = null;
+    
+    const fileInput = document.getElementById('zipFile');
+    const fileInfo = document.getElementById('fileInfo');
+    const runButton = document.getElementById('runBenchmark');
+    const clearButton = document.getElementById('clearResults');
+    const resultsDiv = document.getElementById('results');
+    
+    fileInput.addEventListener('change', (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        fileInfo.textContent = `Selected: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
+        runButton.disabled = false;
+      }
+    });
+    
+    clearButton.addEventListener('click', () => {
+      resultsDiv.innerHTML = '';
+    });
+    
+    runButton.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      
+      runButton.disabled = true;
+      resultsDiv.innerHTML = '<div class="status">⏳ Running benchmarks...</div>';
+      
+      try {
+        await runBenchmarks(selectedFile);
+      } catch (error) {
+        resultsDiv.innerHTML += `<div class="error">❌ Error: ${error.message}</div>`;
+        console.error(error);
+      } finally {
+        runButton.disabled = false;
+      }
+    });
+    
+    function addResult(html) {
+      const statusEl = resultsDiv.querySelector('.status');
+      if (statusEl) statusEl.remove();
+      resultsDiv.innerHTML += html;
+    }
+    
+    async function runBenchmarks(file) {
+      addResult('<h2>📊 Benchmark Results</h2>');
+      
+      // Test 1: Read Central Directory
+      await testReadCentralDirectory(file);
+      
+      // Test 2: Read All Files to Memory
+      await testReadAllToMemory(file);
+      
+      // Test 3: Blob/Memory Performance
+      await testBlobPerformance(file);
+      
+      addResult('<div class="status">✅ All benchmarks complete!</div>');
+    }
+    
+    async function testReadCentralDirectory(file) {
+      addResult(`
+        <div class="test-result">
+          <h3>📋 Test 1: Read Central Directory (Metadata)</h3>
+          <p>Reading entry metadata without extracting file contents.</p>
+        </div>
+      `);
+      
+      // zip-go test
+      const start1 = performance.now();
+      let count1 = 0;
+      for await (const entry of Reader(file)) {
+        count1++;
+        // Only reading metadata
+      }
+      const end1 = performance.now();
+      const time1 = end1 - start1;
+      
+      // yauzl test - using fromBuffer
+      const start2 = performance.now();
+      let count2 = 0;
+      try {
+        // Load yauzl from esm.sh with buffer support
+        const arrayBuffer = await file.arrayBuffer();
+        const yauzl = await import('https://esm.sh/yauzl@3.2.0');
+        
+        await new Promise((resolve, reject) => {
+          yauzl.fromBuffer(Buffer.from(arrayBuffer), { lazyEntries: true }, (err, zipfile) => {
+            if (err) return reject(err);
+            
+            zipfile.readEntry();
+            zipfile.on('entry', (entry) => {
+              count2++;
+              zipfile.readEntry();
+            });
+            zipfile.on('end', resolve);
+            zipfile.on('error', reject);
+          });
+        });
+      } catch (error) {
+        count2 = 'error';
+        console.error('yauzl error:', error);
+      }
+      const end2 = performance.now();
+      const time2 = end2 - start2;
+      
+      const winner = time1 < time2 ? 'zip-go' : 'yauzl';
+      
+      addResult(`
+        <div class="test-result">
+          <div class="metric">zip-go: ${time1.toFixed(2)}ms, ${count1} entries ${winner === 'zip-go' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+          <div class="metric">yauzl:  ${time2.toFixed(2)}ms, ${count2} entries ${winner === 'yauzl' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+        </div>
+      `);
+    }
+    
+    async function testReadAllToMemory(file) {
+      addResult(`
+        <div class="test-result">
+          <h3>💾 Test 2: Read All Files to Memory</h3>
+          <p>Extract all file contents into memory as ArrayBuffers.</p>
+        </div>
+      `);
+      
+      // zip-go test
+      const start1 = performance.now();
+      const data1 = [];
+      for await (const entry of Reader(file)) {
+        if (!entry.directory) {
+          const buffer = await entry.arrayBuffer();
+          data1.push(buffer);
+        }
+      }
+      const end1 = performance.now();
+      const time1 = end1 - start1;
+      
+      // yauzl test
+      const start2 = performance.now();
+      const data2 = [];
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const yauzl = await import('https://esm.sh/yauzl@3.2.0');
+        
+        await new Promise((resolve, reject) => {
+          yauzl.fromBuffer(Buffer.from(arrayBuffer), { lazyEntries: true }, (err, zipfile) => {
+            if (err) return reject(err);
+            
+            zipfile.readEntry();
+            zipfile.on('entry', (entry) => {
+              if (entry.fileName.endsWith('/')) {
+                zipfile.readEntry();
+              } else {
+                zipfile.openReadStream(entry, (err, stream) => {
+                  if (err) return reject(err);
+                  const chunks = [];
+                  stream.on('data', chunk => chunks.push(chunk));
+                  stream.on('end', () => {
+                    data2.push(new Uint8Array(Buffer.concat(chunks)));
+                    zipfile.readEntry();
+                  });
+                });
+              }
+            });
+            zipfile.on('end', resolve);
+            zipfile.on('error', reject);
+          });
+        });
+      } catch (error) {
+        console.error('yauzl error:', error);
+      }
+      const end2 = performance.now();
+      const time2 = end2 - start2;
+      
+      const winner = time1 < time2 ? 'zip-go' : 'yauzl';
+      
+      addResult(`
+        <div class="test-result">
+          <div class="metric">zip-go: ${time1.toFixed(2)}ms, ${data1.length} files ${winner === 'zip-go' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+          <div class="metric">yauzl:  ${time2.toFixed(2)}ms, ${data2.length} files ${winner === 'yauzl' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+        </div>
+      `);
+    }
+    
+    async function testBlobPerformance(file) {
+      addResult(`
+        <div class="test-result">
+          <h3>🎯 Test 3: Blob/Memory Access Performance</h3>
+          <p>Measure memory-based access performance (browser-specific test).</p>
+        </div>
+      `);
+      
+      // Test reading from File object (zip-go's native format)
+      const start1 = performance.now();
+      let found1 = false;
+      for await (const entry of Reader(file)) {
+        if (!entry.directory) {
+          // Access first file as a performance test
+          await entry.arrayBuffer();
+          found1 = true;
+          break;
+        }
+      }
+      const end1 = performance.now();
+      const time1 = end1 - start1;
+      
+      // Test reading from ArrayBuffer (yauzl's format)
+      const start2 = performance.now();
+      let found2 = false;
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const yauzl = await import('https://esm.sh/yauzl@3.2.0');
+        
+        await new Promise((resolve, reject) => {
+          yauzl.fromBuffer(Buffer.from(arrayBuffer), { lazyEntries: true }, (err, zipfile) => {
+            if (err) return reject(err);
+            
+            zipfile.readEntry();
+            zipfile.on('entry', (entry) => {
+              if (!entry.fileName.endsWith('/')) {
+                zipfile.openReadStream(entry, (err, stream) => {
+                  if (err) return reject(err);
+                  const chunks = [];
+                  stream.on('data', chunk => chunks.push(chunk));
+                  stream.on('end', () => {
+                    found2 = true;
+                    zipfile.close();
+                    resolve();
+                  });
+                });
+              } else {
+                zipfile.readEntry();
+              }
+            });
+            zipfile.on('end', resolve);
+            zipfile.on('error', reject);
+          });
+        });
+      } catch (error) {
+        console.error('yauzl error:', error);
+      }
+      const end2 = performance.now();
+      const time2 = end2 - start2;
+      
+      const winner = time1 < time2 ? 'zip-go' : 'yauzl';
+      
+      addResult(`
+        <div class="test-result">
+          <div class="metric">zip-go (File/Blob): ${time1.toFixed(2)}ms ${winner === 'zip-go' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+          <div class="metric">yauzl (ArrayBuffer): ${time2.toFixed(2)}ms ${winner === 'yauzl' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+          <div style="margin-top: 10px; color: #666; font-size: 14px;">
+            <strong>Note:</strong> zip-go reads from Blob/File (streaming), yauzl reads from full ArrayBuffer in memory
+          </div>
+        </div>
+      `);
+    }
+  </script>
+</body>
+</html>
