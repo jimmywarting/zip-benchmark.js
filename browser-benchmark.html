@@ -131,6 +131,7 @@
         <li><strong>zip-go</strong> works natively with browser Blob/File objects</li>
         <li>Both libraries read from memory (File object) for fair comparison</li>
         <li>Some tests are browser-specific (OPFS support if available)</li>
+        <li><strong>⚠️ Important:</strong> Disable ad blockers if modules fail to load from esm.sh</li>
       </ul>
     </div>
     
@@ -152,7 +153,39 @@
 
   <script type="module">
     // Import from esm.sh for browser compatibility
-    import Reader from 'https://esm.sh/zip-go@1.1.1/lib/read.js';
+    // Note: If you get CORS or blocked errors, you may need to:
+    // 1. Disable ad blockers or content blockers
+    // 2. Use a local bundled version
+    // 3. Host the libraries yourself
+    
+    let Reader, yauzl;
+    let importError = null;
+    
+    // Try to load the libraries
+    try {
+      const zipGoModule = await import('https://esm.sh/zip-go@1.1.1/lib/read.js');
+      Reader = zipGoModule.default;
+    } catch (error) {
+      importError = `Failed to load zip-go: ${error.message}`;
+      console.error('zip-go import error:', error);
+    }
+    
+    // Show import errors if any
+    if (importError) {
+      document.getElementById('results').innerHTML = `
+        <div class="error">
+          <strong>⚠️ Module Loading Error</strong><br>
+          ${importError}<br><br>
+          <strong>Possible solutions:</strong>
+          <ul>
+            <li>Disable ad blockers or content blockers</li>
+            <li>Check browser console for CORS errors</li>
+            <li>Ensure you have an active internet connection</li>
+            <li>Try using a different browser</li>
+          </ul>
+        </div>
+      `;
+    }
     
     let selectedFile = null;
     
@@ -166,7 +199,12 @@
       selectedFile = e.target.files[0];
       if (selectedFile) {
         fileInfo.textContent = `Selected: ${selectedFile.name} (${(selectedFile.size / 1024).toFixed(2)} KB)`;
-        runButton.disabled = false;
+        // Only enable button if at least one library loaded
+        if (Reader || yauzl) {
+          runButton.disabled = false;
+        } else {
+          fileInfo.textContent += ' - Error: Libraries failed to load. Check console.';
+        }
       }
     });
     
@@ -220,49 +258,64 @@
       `);
       
       // zip-go test
-      const start1 = performance.now();
-      let count1 = 0;
-      for await (const entry of Reader(file)) {
-        count1++;
-        // Only reading metadata
+      let time1 = 0, count1 = 0;
+      if (Reader) {
+        const start1 = performance.now();
+        for await (const entry of Reader(file)) {
+          count1++;
+          // Only reading metadata
+        }
+        const end1 = performance.now();
+        time1 = end1 - start1;
+      } else {
+        count1 = 'N/A';
       }
-      const end1 = performance.now();
-      const time1 = end1 - start1;
       
       // yauzl test - using fromBuffer
-      const start2 = performance.now();
-      let count2 = 0;
-      try {
-        // Load yauzl from esm.sh with buffer support
-        const arrayBuffer = await file.arrayBuffer();
-        const yauzl = await import('https://esm.sh/yauzl@3.2.0');
-        
-        await new Promise((resolve, reject) => {
-          yauzl.fromBuffer(Buffer.from(arrayBuffer), { lazyEntries: true }, (err, zipfile) => {
-            if (err) return reject(err);
-            
-            zipfile.readEntry();
-            zipfile.on('entry', (entry) => {
-              count2++;
-              zipfile.readEntry();
-            });
-            zipfile.on('end', resolve);
-            zipfile.on('error', reject);
-          });
-        });
-      } catch (error) {
-        count2 = 'error';
-        console.error('yauzl error:', error);
+      let time2 = 0, count2 = 0;
+      if (!yauzl) {
+        try {
+          // Load yauzl from esm.sh with buffer support
+          yauzl = await import('https://esm.sh/yauzl@3.2.0');
+        } catch (error) {
+          console.error('yauzl load error:', error);
+        }
       }
-      const end2 = performance.now();
-      const time2 = end2 - start2;
       
-      const winner = time1 < time2 ? 'zip-go' : 'yauzl';
+      if (yauzl) {
+        const start2 = performance.now();
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          
+          await new Promise((resolve, reject) => {
+            yauzl.fromBuffer(Buffer.from(arrayBuffer), { lazyEntries: true }, (err, zipfile) => {
+              if (err) return reject(err);
+              
+              zipfile.readEntry();
+              zipfile.on('entry', (entry) => {
+                count2++;
+                zipfile.readEntry();
+              });
+              zipfile.on('end', resolve);
+              zipfile.on('error', reject);
+            });
+          });
+        } catch (error) {
+          count2 = 'error';
+          console.error('yauzl error:', error);
+        }
+        const end2 = performance.now();
+        time2 = end2 - start2;
+      } else {
+        count2 = 'N/A';
+      }
+      
+      const winner = time1 && time2 && time1 < time2 ? 'zip-go' : time1 && time2 ? 'yauzl' : 'none';
       
       addResult(`
         <div class="test-result">
-          <div class="metric">zip-go: ${time1.toFixed(2)}ms, ${count1} entries ${winner === 'zip-go' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
-          <div class="metric">yauzl:  ${time2.toFixed(2)}ms, ${count2} entries ${winner === 'yauzl' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+          <div class="metric">zip-go: ${time1 ? time1.toFixed(2) + 'ms' : 'Not loaded'}, ${count1} entries ${winner === 'zip-go' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
+          <div class="metric">yauzl:  ${time2 ? time2.toFixed(2) + 'ms' : 'Not loaded'}, ${count2} entries ${winner === 'yauzl' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
         </div>
       `);
     }

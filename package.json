@@ -27,6 +27,7 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "http-server": "^14.1.1",
     "jszip": "^3.10.1"
   }
 }
