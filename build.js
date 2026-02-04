@@ -137,7 +137,7 @@ const bundleData = {
     ],
     npmPackages: uniqueYauzlDeps
   },
-  penalty: ((yauzlStats.size - zipgoStats.size) / zipgoStats.size * 100).toFixed(1),
+  penalty: zipgoStats.size > 0 ? ((yauzlStats.size - zipgoStats.size) / zipgoStats.size * 100).toFixed(1) : '0',
   generated: new Date().toISOString()
 }
 

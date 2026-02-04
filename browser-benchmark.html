@@ -236,10 +236,13 @@
         const response = await fetch('./dist/bundle-sizes.json');
         const data = await response.json();
         
+        if (data.zipgo.size === 0) {
+          throw new Error('Invalid bundle data: zipgo size is zero');
+        }
+        
         const zipgoKB = (data.zipgo.size / 1024).toFixed(2);
         const yauzlKB = (data.yauzl.size / 1024).toFixed(2);
-        const zipgoPercent = 100;
-        const yauzlPercent = Math.min((data.yauzl.size / data.zipgo.size) * 100, 10000); // Cap for display
+        const multiplier = (data.yauzl.size / data.zipgo.size).toFixed(1);
         
         bundleSizeSection.innerHTML = `
           <h3>📦 Bundle Size Penalty - Browserifying yauzl</h3>
@@ -285,7 +288,7 @@
                 </td>
                 <td>
                   <div class="size-bar">
-                    <div class="size-bar-fill large" style="width: 100%">${data.penalty}% (${Math.round(parseFloat(data.penalty) / 100)}x larger)</div>
+                    <div class="size-bar-fill large" style="width: 100%">${data.penalty}% (${multiplier}x larger)</div>
                   </div>
                 </td>
               </tr>
