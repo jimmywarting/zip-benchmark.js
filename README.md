@@ -82,6 +82,7 @@ The browser benchmarks allow you to test ZIP library performance directly in you
    ```
 
 3. **Open your browser**:
+   - Online Demo: https://jimmywarting.github.io/zip-benchmark.js/browser-benchmark.html
    - Full benchmark: http://localhost:8080/browser-benchmark.html
    - Demo: http://localhost:8080/browser-demo.html
 
