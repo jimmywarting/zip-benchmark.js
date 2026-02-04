@@ -7,7 +7,7 @@ import { join } from 'node:path'
 
 const yauzlOpen = promisify(yauzl.open)
 
-// Hjälpfunktion för minnesanvändning
+// Helper function for memory usage
 function getMemoryUsage() {
   const usage = process.memoryUsage()
   return {
@@ -17,9 +17,9 @@ function getMemoryUsage() {
   }
 }
 
-// Test 1: Läs central directory (metadata för alla filer)
+// Test 1: Read central directory (metadata for all files)
 async function testReadCentralDirectory(zipPath) {
-  console.log('\n📋 Test 1: Läs central directory')
+  console.log('\n📋 Test 1: Read central directory')
   
   // zip-go
   const memBefore1 = getMemoryUsage()
@@ -28,7 +28,7 @@ async function testReadCentralDirectory(zipPath) {
   let count1 = 0
   for await (const entry of Reader(blob)) {
     count1++
-    // Läs bara metadata, ingen data
+    // Read only metadata, no data
   }
   const end1 = performance.now()
   const memAfter1 = getMemoryUsage()
@@ -58,12 +58,12 @@ async function testReadCentralDirectory(zipPath) {
   console.log(`Winner: ${end1 - start1 < end2 - start2 ? 'zip-go 🏆' : 'yauzl 🏆'}`)
 }
 
-// Test 2: Läs alla filer till minnet (arrayBuffer)
+// Test 2: Read all files to memory (arrayBuffer)
 async function testReadAllToMemory(zipPath) {
-  console.log('\n💾 Test 2: Läs alla filer till minnet')
+  console.log('\n💾 Test 2: Read all files to memory')
   
   // zip-go
-  global.gc && global.gc() // Tvinga GC om --expose-gc används
+  global.gc && global.gc() // Force GC if --expose-gc is used
   const memBefore1 = getMemoryUsage()
   const start1 = performance.now()
   const blob = await openAsBlob(zipPath)
@@ -109,16 +109,16 @@ async function testReadAllToMemory(zipPath) {
   const end2 = performance.now()
   const memAfter2 = getMemoryUsage()
   
-  console.log(`zip-go: ${(end1 - start1).toFixed(2)}ms, ${data1.length} filer, heap: ${memAfter1.heapUsed}MB`)
-  console.log(`yauzl:  ${(end2 - start2).toFixed(2)}ms, ${data2.length} filer, heap: ${memAfter2.heapUsed}MB`)
+  console.log(`zip-go: ${(end1 - start1).toFixed(2)}ms, ${data1.length} files, heap: ${memAfter1.heapUsed}MB`)
+  console.log(`yauzl:  ${(end2 - start2).toFixed(2)}ms, ${data2.length} files, heap: ${memAfter2.heapUsed}MB`)
   console.log(`Winner: ${end1 - start1 < end2 - start2 ? 'zip-go 🏆' : 'yauzl 🏆'}`)
 }
 
-// Test 3: Stream till disk (mest verklighetstroget)
+// Test 3: Stream to disk (most realistic)
 async function testStreamToDisk(zipPath, outputDir) {
-  console.log('\n💿 Test 3: Stream alla filer till disk')
+  console.log('\n💿 Test 3: Stream all files to disk')
   
-  // Städa upp och skapa output-mappar
+  // Clean up and create output directories
   rmSync(outputDir + '-zipgo', { recursive: true, force: true })
   rmSync(outputDir + '-yauzl', { recursive: true, force: true })
   mkdirSync(outputDir + '-zipgo', { recursive: true })
@@ -190,18 +190,18 @@ async function testStreamToDisk(zipPath, outputDir) {
   const end2 = performance.now()
   const memAfter2 = getMemoryUsage()
   
-  console.log(`zip-go: ${(end1 - start1).toFixed(2)}ms, ${fileCount1} filer, heap: ${memAfter1.heapUsed}MB`)
-  console.log(`yauzl:  ${(end2 - start2).toFixed(2)}ms, ${fileCount2} filer, heap: ${memAfter2.heapUsed}MB`)
+  console.log(`zip-go: ${(end1 - start1).toFixed(2)}ms, ${fileCount1} files, heap: ${memAfter1.heapUsed}MB`)
+  console.log(`yauzl:  ${(end2 - start2).toFixed(2)}ms, ${fileCount2} files, heap: ${memAfter2.heapUsed}MB`)
   console.log(`Winner: ${end1 - start1 < end2 - start2 ? 'zip-go 🏆' : 'yauzl 🏆'}`)
   
-  // Städa upp
+  // Clean up
   rmSync(outputDir + '-zipgo', { recursive: true, force: true })
   rmSync(outputDir + '-yauzl', { recursive: true, force: true })
 }
 
-// Test 4: Läs en specifik fil (random access)
+// Test 4: Read a specific file (random access)
 async function testReadSpecificFile(zipPath, targetFile) {
-  console.log('\n🎯 Test 4: Hitta och läs en specifik fil')
+  console.log('\n🎯 Test 4: Find and read a specific file')
   
   // zip-go
   const start1 = performance.now()
@@ -250,7 +250,7 @@ async function testReadSpecificFile(zipPath, targetFile) {
   console.log(`Winner: ${end1 - start1 < end2 - start2 ? 'zip-go 🏆' : 'yauzl 🏆'}`)
 }
 
-// Huvudfunktion
+// Main function
 async function runBenchmarks() {
   const zipPath = process.argv[2]
   const targetFile = process.argv[3]
@@ -272,7 +272,7 @@ async function runBenchmarks() {
     await testReadSpecificFile(zipPath, targetFile)
   }
   
-  console.log('\n✅ Alla tester klara!')
+  console.log('\n✅ All tests complete!')
 }
 
 runBenchmarks().catch(console.error)

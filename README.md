@@ -63,22 +63,22 @@ Example output:
 =====================================
 Test file: ./test.zip
 
-📋 Test 1: Läs central directory
+📋 Test 1: Read central directory
 zip-go: 12.34ms, 100 entries, heap: 25.45MB
 yauzl:  15.67ms, 100 entries, heap: 28.91MB
 Winner: zip-go 🏆
 
-💾 Test 2: Läs alla filer till minnet
-zip-go: 234.56ms, 95 filer, heap: 45.67MB
-yauzl:  267.89ms, 95 filer, heap: 48.23MB
+💾 Test 2: Read all files to memory
+zip-go: 234.56ms, 95 files, heap: 45.67MB
+yauzl:  267.89ms, 95 files, heap: 48.23MB
 Winner: zip-go 🏆
 
-💿 Test 3: Stream alla filer till disk
-zip-go: 345.67ms, 95 filer, heap: 35.12MB
-yauzl:  378.90ms, 95 filer, heap: 36.78MB
+💿 Test 3: Stream all files to disk
+zip-go: 345.67ms, 95 files, heap: 35.12MB
+yauzl:  378.90ms, 95 files, heap: 36.78MB
 Winner: zip-go 🏆
 
-✅ Alla tester klara!
+✅ All tests complete!
 ```
 
 ## Requirements
