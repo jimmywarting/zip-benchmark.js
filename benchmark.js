@@ -22,7 +22,6 @@ async function testReadCentralDirectory(zipPath) {
   console.log('\n📋 Test 1: Read central directory')
   
   // zip-go
-  const memBefore1 = getMemoryUsage()
   const start1 = performance.now()
   const blob = await openAsBlob(zipPath)
   let count1 = 0
@@ -34,7 +33,6 @@ async function testReadCentralDirectory(zipPath) {
   const memAfter1 = getMemoryUsage()
   
   // yauzl
-  const memBefore2 = getMemoryUsage()
   const start2 = performance.now()
   let count2 = 0
   await new Promise((resolve, reject) => {
@@ -64,7 +62,6 @@ async function testReadAllToMemory(zipPath) {
   
   // zip-go
   global.gc && global.gc() // Force GC if --expose-gc is used
-  const memBefore1 = getMemoryUsage()
   const start1 = performance.now()
   const blob = await openAsBlob(zipPath)
   const data1 = []
@@ -79,7 +76,6 @@ async function testReadAllToMemory(zipPath) {
   
   // yauzl
   global.gc && global.gc()
-  const memBefore2 = getMemoryUsage()
   const start2 = performance.now()
   const data2 = []
   await new Promise((resolve, reject) => {
@@ -125,7 +121,6 @@ async function testStreamToDisk(zipPath, outputDir) {
   mkdirSync(outputDir + '-yauzl', { recursive: true })
   
   // zip-go
-  const memBefore1 = getMemoryUsage()
   const start1 = performance.now()
   const blob = await openAsBlob(zipPath)
   let fileCount1 = 0
@@ -157,7 +152,6 @@ async function testStreamToDisk(zipPath, outputDir) {
   const memAfter1 = getMemoryUsage()
   
   // yauzl
-  const memBefore2 = getMemoryUsage()
   const start2 = performance.now()
   let fileCount2 = 0
   await new Promise((resolve, reject) => {
