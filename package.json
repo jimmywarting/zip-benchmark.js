@@ -1,0 +1,26 @@
+{
+  "name": "zip-benchmark",
+  "version": "1.0.0",
+  "description": "Benchmark comparing zip-go and yauzl performance",
+  "type": "module",
+  "main": "benchmark.js",
+  "scripts": {
+    "bench": "node benchmark.js"
+  },
+  "keywords": [
+    "zip",
+    "benchmark",
+    "performance",
+    "zip-go",
+    "yauzl"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "yauzl": "^3.2.0",
+    "zip-go": "^1.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
