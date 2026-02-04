@@ -117,12 +117,77 @@
       margin: 15px 0;
       border-radius: 4px;
     }
+    .bundle-size-comparison {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .bundle-size-comparison h3 {
+      margin-top: 0;
+      color: #856404;
+    }
+    .size-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    .size-table th,
+    .size-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .size-table th {
+      background: #f8f9fa;
+      font-weight: bold;
+    }
+    .size-bar {
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      height: 30px;
+      position: relative;
+      margin: 10px 0;
+    }
+    .size-bar-fill {
+      background: linear-gradient(90deg, #28a745, #20c997);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding: 0 10px;
+      color: white;
+      font-weight: bold;
+      font-size: 12px;
+    }
+    .size-bar-fill.large {
+      background: linear-gradient(90deg, #dc3545, #e74c3c);
+    }
+    .dependencies-list {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    .dependencies-list code {
+      background: #e9ecef;
+      padding: 2px 6px;
+      border-radius: 3px;
+      margin: 2px;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>🏁 ZIP Benchmark - Browser Edition</h1>
     <p>Compare the performance of <code>zip-go</code> and <code>yauzl</code> ZIP libraries in the browser.</p>
+    
+    <div class="bundle-size-comparison" id="bundleSizeSection">
+      <h3>📦 Bundle Size Penalty</h3>
+      <p><strong>Loading bundle size data...</strong></p>
+    </div>
     
     <div class="info">
       <strong>ℹ️ Browser Testing Notes:</strong>
@@ -163,6 +228,79 @@
     const runButton = document.getElementById('runBenchmark');
     const clearButton = document.getElementById('clearResults');
     const resultsDiv = document.getElementById('results');
+    const bundleSizeSection = document.getElementById('bundleSizeSection');
+    
+    // Load and display bundle size comparison
+    async function loadBundleSizeData() {
+      try {
+        const response = await fetch('./dist/bundle-sizes.json');
+        const data = await response.json();
+        
+        const zipgoKB = (data.zipgo.size / 1024).toFixed(2);
+        const yauzlKB = (data.yauzl.size / 1024).toFixed(2);
+        const zipgoPercent = 100;
+        const yauzlPercent = Math.min((data.yauzl.size / data.zipgo.size) * 100, 10000); // Cap for display
+        
+        bundleSizeSection.innerHTML = `
+          <h3>📦 Bundle Size Penalty - Browserifying yauzl</h3>
+          <p>yauzl requires extensive Node.js polyfills to work in browsers, resulting in a <strong>${data.penalty}% larger bundle</strong>.</p>
+          
+          <table class="size-table">
+            <thead>
+              <tr>
+                <th>Library</th>
+                <th>Bundle Size</th>
+                <th>Dependencies</th>
+                <th>Visual Comparison</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>zip-go</strong></td>
+                <td><strong>${zipgoKB} KB</strong> (${data.zipgo.size.toLocaleString()} bytes)</td>
+                <td><span style="color: #28a745;">✓ Zero dependencies</span></td>
+                <td>
+                  <div class="size-bar">
+                    <div class="size-bar-fill" style="width: 100%">100%</div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>yauzl</strong></td>
+                <td><strong>${yauzlKB} KB</strong> (${data.yauzl.size.toLocaleString()} bytes)</td>
+                <td>
+                  <div class="dependencies-list">
+                    <strong>${data.yauzl.dependencies.length} polyfills required:</strong><br>
+                    ${data.yauzl.dependencies.map(dep => `<code>${dep}</code>`).join(' ')}
+                  </div>
+                </td>
+                <td>
+                  <div class="size-bar">
+                    <div class="size-bar-fill large" style="width: 100%">${data.penalty}% (${Math.round(parseFloat(data.penalty) / 100)}x larger)</div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <p style="margin-top: 15px; color: #856404;">
+            <strong>⚠️ Key Insight:</strong> yauzl brings in Node.js polyfills (buffer, streams, zlib, events, util, process) 
+            which adds <strong>${(data.yauzl.size - data.zipgo.size / 1024).toFixed(2)} KB</strong> of overhead to your browser bundle. 
+            zip-go works natively with browser APIs (Blob/File) and requires zero polyfills.
+          </p>
+        `;
+      } catch (error) {
+        console.error('Failed to load bundle size data:', error);
+        bundleSizeSection.innerHTML = `
+          <h3>📦 Bundle Size Penalty</h3>
+          <p style="color: #dc3545;">Failed to load bundle size data. Run <code>npm run build</code> to generate it.</p>
+        `;
+      }
+    }
+    
+    // Load bundle size data on page load
+    loadBundleSizeData();
+
     
     fileInput.addEventListener('change', (e) => {
       selectedFile = e.target.files[0];

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as esbuild from 'esbuild'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile, stat } from 'node:fs/promises'
 
 const packageJson = JSON.parse(await readFile('./package.json', 'utf-8'))
 
@@ -58,4 +58,78 @@ await esbuild.build({
 })
 
 console.log('✅ Built dist/zip-benchmark.iife.js')
-console.log('✅ Build complete!')
+
+// Build zip-go only bundle (minimal, no Node.js dependencies)
+await esbuild.build({
+  entryPoints: ['src/zipgo-only.js'],
+  bundle: true,
+  platform: 'browser',
+  target: 'es2022',
+  sourcemap: false,
+  format: 'esm',
+  outfile: 'dist/zipgo-only.js',
+  define: {
+    'process.env.NODE_ENV': '"production"',
+    'global': 'globalThis'
+  }
+})
+
+const zipgoStats = await stat('dist/zipgo-only.js')
+console.log(`✅ Built dist/zipgo-only.js (${zipgoStats.size} bytes)`)
+
+// Build yauzl only bundle (with all Node.js polyfills)
+await esbuild.build({
+  entryPoints: ['src/yauzl-only.js'],
+  bundle: true,
+  platform: 'browser',
+  target: 'es2022',
+  sourcemap: false,
+  format: 'esm',
+  outfile: 'dist/yauzl-only.js',
+  define: {
+    'process.env.NODE_ENV': '"production"',
+    'global': 'globalThis'
+  },
+  alias: {
+    'fs': './src/fs-stub.js',
+    'zlib': 'browserify-zlib',
+    'stream': 'stream-browserify',
+    'util': 'util',
+    'events': 'events',
+    'buffer': 'buffer'
+  },
+  inject: ['./src/shims.js']
+})
+
+const yauzlStats = await stat('dist/yauzl-only.js')
+console.log(`✅ Built dist/yauzl-only.js (${yauzlStats.size} bytes)`)
+
+// Generate bundle size data for the browser benchmark
+const bundleData = {
+  zipgo: {
+    size: zipgoStats.size,
+    dependencies: []
+  },
+  yauzl: {
+    size: yauzlStats.size,
+    dependencies: [
+      'buffer',
+      'stream-browserify',
+      'events',
+      'util',
+      'browserify-zlib',
+      'process'
+    ]
+  },
+  penalty: ((yauzlStats.size - zipgoStats.size) / zipgoStats.size * 100).toFixed(1),
+  generated: new Date().toISOString()
+}
+
+await writeFile('dist/bundle-sizes.json', JSON.stringify(bundleData, null, 2))
+console.log('✅ Generated dist/bundle-sizes.json')
+
+console.log('\n📊 Bundle Size Comparison:')
+console.log(`   zip-go:  ${(zipgoStats.size / 1024).toFixed(2)} KB`)
+console.log(`   yauzl:   ${(yauzlStats.size / 1024).toFixed(2)} KB`)
+console.log(`   Penalty: ${bundleData.penalty}% larger`)
+console.log('\n✅ Build complete!')

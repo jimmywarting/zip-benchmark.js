@@ -1,0 +1,19 @@
+{
+  "zipgo": {
+    "size": 9010,
+    "dependencies": []
+  },
+  "yauzl": {
+    "size": 534786,
+    "dependencies": [
+      "buffer",
+      "stream-browserify",
+      "events",
+      "util",
+      "browserify-zlib",
+      "process"
+    ]
+  },
+  "penalty": "5835.5",
+  "generated": "2026-02-04T20:23:15.053Z"
+}
