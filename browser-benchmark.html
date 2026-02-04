@@ -212,9 +212,6 @@
       // Test 2: Read All Files to Memory
       await testReadAllToMemory(file);
       
-      // Test 3: Blob/Memory Performance
-      await testBlobPerformance(file);
-      
       addResult('<div class="status">✅ All benchmarks complete!</div>');
     }
     
@@ -359,87 +356,6 @@
         <div class="test-result">
           <div class="metric">zip-go: ${time1 ? time1.toFixed(2) + 'ms' : 'Not loaded'}, ${data1.length} files ${winner === 'zip-go' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
           <div class="metric">yauzl:  ${time2 ? time2.toFixed(2) + 'ms' : 'Not loaded'}, ${data2.length} files ${winner === 'yauzl' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
-        </div>
-      `);
-    }
-    
-    async function testBlobPerformance(file) {
-      addResult(`
-        <div class="test-result">
-          <h3>🎯 Test 3: Blob/Memory Access Performance</h3>
-          <p>Measure memory-based access performance (browser-specific test).</p>
-        </div>
-      `);
-      
-      // Test reading from File object (zip-go's native format)
-      let time1 = 0, found1 = false;
-      if (Reader) {
-        const start1 = performance.now();
-        for await (const entry of Reader(file)) {
-          if (!entry.directory) {
-            // Access first file as a performance test
-            await entry.arrayBuffer();
-            found1 = true;
-            break;
-          }
-        }
-        const end1 = performance.now();
-        time1 = end1 - start1;
-      }
-      
-      // Test reading from ArrayBuffer (yauzl's format)
-      let time2 = 0, found2 = false;
-      if (yauzl) {
-        const start2 = performance.now();
-        try {
-          const arrayBuffer = await file.arrayBuffer();
-          
-          // Check if Buffer is available
-          if (typeof Buffer === 'undefined') {
-            throw new Error('Buffer is not available in this environment');
-          }
-          
-          await new Promise((resolve, reject) => {
-            yauzl.fromBuffer(Buffer.from(arrayBuffer), { lazyEntries: true }, (err, zipfile) => {
-              if (err) return reject(err);
-              
-              zipfile.readEntry();
-              zipfile.on('entry', (entry) => {
-                if (!entry.fileName.endsWith('/')) {
-                  zipfile.openReadStream(entry, (err, stream) => {
-                    if (err) return reject(err);
-                    const chunks = [];
-                    stream.on('data', chunk => chunks.push(chunk));
-                    stream.on('end', () => {
-                      found2 = true;
-                      zipfile.close();
-                      resolve();
-                    });
-                  });
-                } else {
-                  zipfile.readEntry();
-                }
-              });
-              zipfile.on('end', resolve);
-              zipfile.on('error', reject);
-            });
-          });
-        } catch (error) {
-          console.error('yauzl error:', error);
-        }
-        const end2 = performance.now();
-        time2 = end2 - start2;
-      }
-      
-      const winner = time1 && time2 && time1 < time2 ? 'zip-go' : time1 && time2 ? 'yauzl' : 'none';
-      
-      addResult(`
-        <div class="test-result">
-          <div class="metric">zip-go (File/Blob): ${time1 ? time1.toFixed(2) + 'ms' : 'Not loaded'} ${winner === 'zip-go' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
-          <div class="metric">yauzl (ArrayBuffer): ${time2 ? time2.toFixed(2) + 'ms' : 'Not loaded'} ${winner === 'yauzl' ? '<span class="winner">🏆 Winner</span>' : ''}</div>
-          <div style="margin-top: 10px; color: #666; font-size: 14px;">
-            <strong>Note:</strong> zip-go reads from Blob/File (streaming), yauzl reads from full ArrayBuffer in memory
-          </div>
         </div>
       `);
     }
