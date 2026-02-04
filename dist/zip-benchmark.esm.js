@@ -1989,7 +1989,7 @@ var init_shims = __esm({
     globalThis.process = import_browser.default;
     if (typeof globalThis.setImmediate === "undefined") {
       globalThis.setImmediate = function(callback, ...args) {
-        return setTimeout(callback, 0, ...args);
+        return setTimeout(() => callback(...args), 0);
       };
     }
     if (typeof globalThis.clearImmediate === "undefined") {
