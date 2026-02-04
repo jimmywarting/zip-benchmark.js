@@ -161,6 +161,8 @@ Winner: zip-go 🏆
 ✅ All tests complete!
 ```
 
+Only reason why yauzl won the stream to disc was b/c nodejs dose not have good alternative way to write blob or stream data to disc using web standards: https://github.com/nodejs/node/issues/61684
+
 ## Requirements
 
 - Node.js >= 18.0.0
