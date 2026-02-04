@@ -61,21 +61,26 @@ Example output:
 ```
 🏁 Performance Test: yauzl vs zip-go
 =====================================
-Test file: ./test.zip
+Test file: test.zip
 
 📋 Test 1: Read central directory
-zip-go: 12.34ms, 100 entries, heap: 25.45MB
-yauzl:  15.67ms, 100 entries, heap: 28.91MB
+zip-go: 2.66ms, 5 entries, heap: 4.68MB
+yauzl:  5.38ms, 5 entries, heap: 4.53MB
 Winner: zip-go 🏆
 
 💾 Test 2: Read all files to memory
-zip-go: 234.56ms, 95 files, heap: 45.67MB
-yauzl:  267.89ms, 95 files, heap: 48.23MB
+zip-go: 2.22ms, 4 files, heap: 3.97MB
+yauzl:  4.11ms, 4 files, heap: 4.06MB
 Winner: zip-go 🏆
 
 💿 Test 3: Stream all files to disk
-zip-go: 345.67ms, 95 files, heap: 35.12MB
-yauzl:  378.90ms, 95 files, heap: 36.78MB
+zip-go: 13.12ms, 4 files, heap: 5.07MB
+yauzl:  5.02ms, 4 files, heap: 5.25MB
+Winner: yauzl 🏆
+
+🎯 Test 4: Find and read a specific file
+zip-go: 0.76ms, found: true
+yauzl:  1.07ms, found: true
 Winner: zip-go 🏆
 
 ✅ All tests complete!
