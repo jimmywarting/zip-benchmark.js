@@ -152,6 +152,10 @@
   </div>
 
   <script type="module">
+    import Reader from 'https://esm.sh/zip-go/lib/read.js'
+    import yauzl from 'https://esm.sh/yauzl'
+    import Buffer from 'https://esm.sh/buffer'
+    
     // Import from esm.sh for browser compatibility
     // Note: If you get CORS or blocked errors, you may need to:
     // 1. Disable ad blockers or content blockers
@@ -162,47 +166,7 @@
     const ZIP_GO_VERSION = '1.1.1';
     const YAUZL_VERSION = '3.2.0';
     
-    let Reader, yauzl;
     let importError = null;
-    
-    // Try to load the libraries
-    try {
-      const zipGoModule = await import(`https://esm.sh/zip-go@${ZIP_GO_VERSION}/lib/read.js`);
-      Reader = zipGoModule.default;
-    } catch (error) {
-      importError = `Failed to load zip-go: ${error.message}`;
-      console.error('zip-go import error:', error);
-    }
-    
-    // Try to preload yauzl
-    try {
-      yauzl = await import(`https://esm.sh/yauzl@${YAUZL_VERSION}`);
-      // Verify Buffer is available (needed for yauzl)
-      if (typeof Buffer === 'undefined') {
-        console.warn('Buffer global not available, yauzl may not work correctly');
-      }
-    } catch (error) {
-      console.warn('yauzl preload failed, will retry on demand:', error);
-      yauzl = null;
-    }
-    
-    // Show import errors if any
-    if (importError && !yauzl) {
-      document.getElementById('results').innerHTML = `
-        <div class="error">
-          <strong>⚠️ Module Loading Error</strong><br>
-          ${importError}<br><br>
-          <strong>Possible solutions:</strong>
-          <ul>
-            <li>Disable ad blockers or content blockers</li>
-            <li>Check browser console for CORS errors</li>
-            <li>Ensure you have an active internet connection</li>
-            <li>Try using a different browser</li>
-          </ul>
-        </div>
-      `;
-    }
-    
     let selectedFile = null;
     
     const fileInput = document.getElementById('zipFile');
